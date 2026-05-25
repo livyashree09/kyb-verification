@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { checkPAN, checkGST, checkCIN, checkLLPIN } = require('../controllers/verificationController');
-const { validatePAN, validateGST, validateCIN, validateLLPIN } = require('../validators/kybValidator');
+const { 
+  checkPAN, checkGST, checkCIN, checkLLPIN, checkDigilocker,
+  initDigilockerSession, getDigilockerSessionStatus, 
+  getDigilockerUserProfile, getDigilockerDocuments
+} = require('../controllers/verificationController');
+const { 
+  validatePAN, validateGST, validateCIN, validateLLPIN, validateDigilocker,
+  validateInitiateSession, validateSessionId
+} = require('../validators/kybValidator');
 
 /**
  * POST /api/verify/pan
@@ -30,5 +37,38 @@ router.post('/cin', validateCIN, checkCIN);
  * Body: { "llpin": "AAA-1234" }
  */
 router.post('/llpin', validateLLPIN, checkLLPIN);
+
+/**
+ * POST /api/verify/digilocker
+ * Standalone Digilocker user verification.
+ * Body: { "mobile": "9876543210" }
+ */
+router.post('/digilocker', validateDigilocker, checkDigilocker);
+
+/**
+ * POST /api/verify/digilocker/sessions/init
+ * Initiate a Digilocker session
+ * Body: { "mobile": "9876543210", "flow": "signin", "redirectUrl": "https://example.com", "docTypes": ["aadhaar"] }
+ */
+router.post('/digilocker/sessions/init', validateInitiateSession, initDigilockerSession);
+
+/**
+ * GET /api/verify/digilocker/sessions/:sessionId/status
+ * Get the status of a Digilocker session
+ */
+router.get('/digilocker/sessions/:sessionId/status', validateSessionId, getDigilockerSessionStatus);
+
+/**
+ * GET /api/verify/digilocker/sessions/:sessionId/user/profile
+ * Get user profile from a Digilocker session
+ */
+router.get('/digilocker/sessions/:sessionId/user/profile', validateSessionId, getDigilockerUserProfile);
+
+/**
+ * GET /api/verify/digilocker/sessions/:sessionId/documents/:documentType
+ * Fetch documents from a Digilocker session
+ * documentType: aadhaar, pan, driving_license, etc.
+ */
+router.get('/digilocker/sessions/:sessionId/documents/:documentType', validateSessionId, getDigilockerDocuments);
 
 module.exports = router;

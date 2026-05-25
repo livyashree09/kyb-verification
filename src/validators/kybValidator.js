@@ -7,6 +7,7 @@ const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 const CIN_REGEX = /^[A-Z]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/;
 const LLPIN_REGEX = /^[A-Z]{3}-[0-9]{4}$/;
+const MOBILE_REGEX = /^[6-9][0-9]{9}$/;
 
 // ---------------------------------------------------------------------------
 // Joi schemas per business type
@@ -210,10 +211,83 @@ const validateLLPIN = (req, res, next) => {
   next();
 };
 
+const validateDigilocker = (req, res, next) => {
+  const schema = Joi.object({
+    mobile: Joi.string().pattern(MOBILE_REGEX).required().messages({
+      'string.pattern.base': 'Mobile must be a valid 10-digit Indian mobile number',
+      'any.required': 'Mobile is required',
+    }),
+  });
+
+  const { error, value } = schema.validate(req.body, { convert: true });
+  if (error) {
+    return res.status(400).json({ success: false, message: error.details[0].message });
+  }
+  req.validatedBody = value;
+  next();
+};
+
+const validateInitiateSession = (req, res, next) => {
+  const schema = Joi.object({
+    mobile: Joi.string().pattern(MOBILE_REGEX).required(),
+
+    flow: Joi.string().valid('signin', 'signup').required(),
+
+    redirect_url: Joi.string().uri().required(),   // FIXED
+
+    doc_types: Joi.array().items(Joi.string()).required(), // FIXED
+
+    options: Joi.object({
+      verification_method: Joi.array().items(Joi.string()),
+      pinless: Joi.boolean(),
+      usernameless: Joi.boolean(),
+      verified_mobile: Joi.string().pattern(MOBILE_REGEX),
+    }).optional()
+  });
+
+  const { error, value } = schema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false // IMPORTANT FIX
+  });
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.details.map(d => d.message).join(', ')
+    });
+  }
+
+  req.validatedBody = value;
+  next();
+};
+
+const validateSessionId = (req, res, next) => {
+  const schema = Joi.object({
+    sessionId: Joi.string().required()
+  });
+
+  const { error, value } = schema.validate(
+    { sessionId: req.params.sessionId },
+    { abortEarly: false }
+  );
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid sessionId'
+    });
+  }
+
+  req.validatedParams = value;
+  next();
+};
 module.exports = {
   validateKYBRequest,
   validatePAN,
   validateGST,
   validateCIN,
   validateLLPIN,
+  validateDigilocker,
+  validateInitiateSession,
+  validateSessionId,
 };
