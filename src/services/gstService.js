@@ -6,23 +6,23 @@ const verifyGST = async (gstin) => {
     const token = await getAuthToken();
 
     const requestBody = {
-      gstin: gstin,
-      consent: 'Y'
+      gstin: gstin
     };
 
     const headers = {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.SANDBOX_API_KEY,
-      'x-api-version': '2.0',
-      'authorization': token
+      "Content-Type": "application/json",
+      "Authorization": token,
+      "x-api-key": process.env.SANDBOX_API_KEY,
+      "x-api-version": "2.0",
+      "x-accept-cache": "true"
     };
 
-    console.log("URL:", "https://api.sandbox.co.in/gst/compliance/public/gstin/search");
+    console.log("URL:", "https://test-api.sandbox.co.in/gst/compliance/public/gstin/verify");
     console.log("Headers:", headers);
     console.log("Body:", requestBody);
 
     const response = await axios.post(
-      'https://api.sandbox.co.in/gst/compliance/public/gstin/search',
+      "https://test-api.sandbox.co.in/gst/compliance/public/gstin/verify",
       requestBody,
       { headers }
     );

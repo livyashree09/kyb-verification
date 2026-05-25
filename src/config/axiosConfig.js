@@ -6,16 +6,20 @@ const createAxiosInstance = (token = null) => {
   const headers = {
     'Content-Type': 'application/json',
     'x-api-key': process.env.SANDBOX_API_KEY,
-    'x-api-version': '2.0',
+    'x-api-version': '1.0.0'   // only if Sandbox docs require it
   };
 
+
   if (token) {
-    headers['authorization'] = token;   // FIXED (lowercase)
+    headers['Authorization'] = token;
   }
+
+  console.log("BASE URL:", BASE_URL);
+  console.log("HEADERS:", headers);
 
   return axios.create({
     baseURL: BASE_URL,
-    headers,
+    headers
   });
 };
 

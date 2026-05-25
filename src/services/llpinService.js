@@ -1,31 +1,23 @@
 const { getAuthToken } = require('./authService');
-const axios = require('axios');
+const { createAxiosInstance } = require('../config/axiosConfig');
 
 const verifyLLPIN = async (llpin) => {
   try {
     const token = await getAuthToken();
+    const axiosInstance = createAxiosInstance(token);
 
     const requestBody = {
-      search: llpin,     // <-- use search instead of llpin
-      consent: 'Y',
-      reason: 'KYB Verification'
+      "@entity": "in.co.sandbox.kyc.mca.master_data.request",
+      id: llpin,
+      consent: "y",
+      reason: "For Company KYC"
     };
 
-    const headers = {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.SANDBOX_API_KEY,
-      'x-api-version': '2.0',
-      'authorization': token
-    };
+    console.log("LLPIN Request:", requestBody);
 
-    console.log("URL:", "https://test-api.sandbox.co.in/mca/company/master-data/search");
-    console.log("Headers:", headers);
-    console.log("Body:", requestBody);
-
-    const response = await axios.post(
-      'https://test-api.sandbox.co.in/mca/company/master-data/search',
-      requestBody,
-      { headers }
+    const response = await axiosInstance.post(
+      '/mca/company/master-data/search',   // FIXED
+      requestBody
     );
 
     console.log("Sandbox Response:", response.data);

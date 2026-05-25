@@ -19,7 +19,6 @@ const getAuthToken = async () => {
         headers: {
           'x-api-key': process.env.SANDBOX_API_KEY,
           'x-api-secret': process.env.SANDBOX_API_SECRET,
-          'x-api-version': '2.0',
           'Content-Type': 'application/json'
         }
       }
@@ -33,7 +32,7 @@ const getAuthToken = async () => {
 
     console.log("TOKEN:", cachedToken);
 
-    tokenExpiry = now + 55 * 60 * 1000;
+   tokenExpiry = now + 23 * 60 * 60 * 1000;
 
     return cachedToken;
 

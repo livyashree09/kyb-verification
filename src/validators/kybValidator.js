@@ -145,6 +145,8 @@ const validateKYBRequest = (req, res, next) => {
 // ---------------------------------------------------------------------------
 
 const validatePAN = (req, res, next) => {
+    console.log("validatePAN middleware hit");
+  console.log("Incoming body:", req.body);
   const schema = Joi.object({
     pan: Joi.string().uppercase().pattern(PAN_REGEX).required().messages({
       'string.pattern.base': 'PAN must be in format ABCDE1234F',

@@ -12,10 +12,12 @@ const verifyPAN = async (pan) => {
       name_as_per_pan: "John Ronald Doe",
       date_of_birth: "11/11/2001",
       consent: "Y",
-      reason: "KYB Verification"
+      reason: "For onboarding customers"
     };
 
-    console.log("Request Body:", requestBody);
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.log("Request Headers:", axiosInstance.defaults.headers);
+    console.log("Request URL:", axiosInstance.defaults.baseURL + '/kyc/pan/verify');
 
     const response = await axiosInstance.post(
       '/kyc/pan/verify',
@@ -28,6 +30,7 @@ const verifyPAN = async (pan) => {
 
   } catch (error) {
     console.error("Sandbox Error:", error.response?.data || error.message);
+    console.error("Full Error:", error);
     throw error;
   }
 };

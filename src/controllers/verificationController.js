@@ -7,10 +7,15 @@ const { verifyLLPIN } = require('../services/llpinService');
  * POST /api/verify/pan
  */
 const checkPAN = async (req, res, next) => {
+  console.log("PAN route hit");
+  console.log("req.body:", req.body);
+  console.log("req.validatedBody:", req.validatedBody);
+
   try {
     const data = await verifyPAN(req.validatedBody.pan);
     return res.status(200).json({ success: true, data });
   } catch (err) {
+    console.error("Controller Error:", err.message);
     next(err);
   }
 };
