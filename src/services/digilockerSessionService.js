@@ -8,9 +8,40 @@ const getHeaders = async () => {
 
   return {
     "Content-Type": "application/json",
-    "Authorization": token, // change to `Bearer ${token}` if needed
+    "Authorization": token,
     "x-api-key": process.env.SANDBOX_API_KEY,
   };
+};
+
+/**
+ * VERIFY USER
+ */
+const verifyUser = async (mobile) => {
+  try {
+    if (!mobile) throw new Error("mobile is required");
+
+    const headers = await getHeaders();
+
+    const body = {
+      "@entity": "in.co.sandbox.kyc.digilocker.user.verification.request",
+      mobile
+    };
+
+    const response = await axios.post(
+      `${BASE_URL}/user/verify`,
+      body,
+      { headers }
+    );
+
+    return response.data?.data;
+
+  } catch (error) {
+    console.error(
+      "verifyUser error:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
 };
 
 /**
@@ -19,6 +50,7 @@ const getHeaders = async () => {
 const initiateSession = async (requestData) => {
   try {
     if (!requestData?.mobile) throw new Error("mobile is required");
+
     if (!requestData?.redirect_url && !requestData?.redirectUrl) {
       throw new Error("redirect_url is required");
     }
@@ -29,23 +61,30 @@ const initiateSession = async (requestData) => {
       "@entity": "in.co.sandbox.kyc.digilocker.session.request",
       flow: requestData.flow || "signin",
       redirect_url: requestData.redirect_url || requestData.redirectUrl,
-      doc_types: requestData.doc_types || requestData.docTypes || ["aadhaar"],
+      doc_types: requestData.doc_types || ["aadhaar"],
       options: {
         verification_method: ["aadhaar"],
         pinless: true,
         usernameless: true,
-        verified_mobile: requestData.mobile,
+        verified_mobile: requestData.mobile
       }
     };
 
-    const url = `${BASE_URL}/sessions/init`;
+    console.log("FINAL BODY:", JSON.stringify(body, null, 2));
 
-    const response = await axios.post(url, body, { headers });
+    const response = await axios.post(
+      `${BASE_URL}/sessions/init`,
+      body,
+      { headers }
+    );
 
     return response.data?.data;
 
   } catch (error) {
-    console.error("initiateSession error:", error.response?.data || error.message);
+    console.error(
+      "initiateSession error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -59,14 +98,18 @@ const getSessionStatus = async (sessionId) => {
 
     const headers = await getHeaders();
 
-    const url = `${BASE_URL}/sessions/${sessionId}/status`;
-
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(
+      `${BASE_URL}/sessions/${sessionId}/status`,
+      { headers }
+    );
 
     return response.data?.data;
 
   } catch (error) {
-    console.error("getSessionStatus error:", error.response?.data || error.message);
+    console.error(
+      "getSessionStatus error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -76,16 +119,22 @@ const getSessionStatus = async (sessionId) => {
  */
 const getUserProfile = async (sessionId) => {
   try {
+    if (!sessionId) throw new Error("sessionId is required");
+
     const headers = await getHeaders();
 
-    const url = `${BASE_URL}/sessions/${sessionId}/user/profile`;
-
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(
+      `${BASE_URL}/sessions/${sessionId}/user/profile`,
+      { headers }
+    );
 
     return response.data?.data;
 
   } catch (error) {
-    console.error("getUserProfile error:", error.response?.data || error.message);
+    console.error(
+      "getUserProfile error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
@@ -93,27 +142,30 @@ const getUserProfile = async (sessionId) => {
 /**
  * FETCH DOCUMENTS
  */
-const fetchDocuments = async (sessionId, docType) => {
+const fetchDocuments = async (sessionId, docType = "aadhaar") => {
   try {
-    if (!sessionId || !docType) {
-      throw new Error("sessionId and docType are required");
-    }
+    if (!sessionId) throw new Error("sessionId is required");
 
     const headers = await getHeaders();
 
-    const url = `${BASE_URL}/sessions/${sessionId}/documents/${docType}`;
-
-    const response = await axios.get(url, { headers });
+    const response = await axios.get(
+      `${BASE_URL}/sessions/${sessionId}/documents/${docType}`,
+      { headers }
+    );
 
     return response.data?.data?.files || [];
 
   } catch (error) {
-    console.error("fetchDocuments error:", error.response?.data || error.message);
+    console.error(
+      "fetchDocuments error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 module.exports = {
+  verifyUser,
   initiateSession,
   getSessionStatus,
   getUserProfile,

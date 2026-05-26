@@ -61,12 +61,37 @@ const checkLLPIN = async (req, res, next) => {
 /**
  * POST /api/verify/digilocker
  */
-const checkDigilocker = async (req, res, next) => {
+const { verifyUser } = require("../services/digilockerservice");
+
+const checkDigilocker = async (req, res) => {
   try {
-    const data = await verifyDigilocker(req.validatedBody.mobile);
-    return res.status(200).json({ success: true, data });
-  } catch (err) {
-    next(err);
+    // safer fallback
+    const mobile = req.validatedBody?.mobile || req.body?.mobile;
+
+    if (!mobile) {
+      return res.status(400).json({
+        success: false,
+        message: "mobile is required"
+      });
+    }
+
+    const result = await verifyUser(mobile);
+
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error(
+      "checkDigilocker error:",
+      error.response?.data || error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.response?.data?.message || error.message
+    });
   }
 };
 

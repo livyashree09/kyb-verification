@@ -211,49 +211,32 @@ const validateLLPIN = (req, res, next) => {
   next();
 };
 
-const validateDigilocker = (req, res, next) => {
+const validateDigilockerSession = (req, res, next) => {
   const schema = Joi.object({
     mobile: Joi.string().pattern(MOBILE_REGEX).required().messages({
-      'string.pattern.base': 'Mobile must be a valid 10-digit Indian mobile number',
-      'any.required': 'Mobile is required',
+      'string.pattern.base': 'mobile must be a valid 10-digit Indian mobile number',
+      'any.required': 'mobile is required',
     }),
+
+    flow: Joi.string().optional().default("signin"),
+
+    redirect_url: Joi.string().uri().required().messages({
+      'string.uri': 'redirect_url must be a valid URL',
+      'any.required': 'redirect_url is required',
+    }),
+
+    doc_types: Joi.array()
+      .items(Joi.string())
+      .optional()
+      .default(["aadhaar"]),
   });
 
-  const { error, value } = schema.validate(req.body, { convert: true });
-  if (error) {
-    return res.status(400).json({ success: false, message: error.details[0].message });
-  }
-  req.validatedBody = value;
-  next();
-};
-
-const validateInitiateSession = (req, res, next) => {
-  const schema = Joi.object({
-    mobile: Joi.string().pattern(MOBILE_REGEX).required(),
-
-    flow: Joi.string().valid('signin', 'signup').required(),
-
-    redirect_url: Joi.string().uri().required(),   // FIXED
-
-    doc_types: Joi.array().items(Joi.string()).required(), // FIXED
-
-    options: Joi.object({
-      verification_method: Joi.array().items(Joi.string()),
-      pinless: Joi.boolean(),
-      usernameless: Joi.boolean(),
-      verified_mobile: Joi.string().pattern(MOBILE_REGEX),
-    }).optional()
-  });
-
-  const { error, value } = schema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false // IMPORTANT FIX
-  });
+  const { error, value } = schema.validate(req.body);
 
   if (error) {
     return res.status(400).json({
       success: false,
-      message: error.details.map(d => d.message).join(', ')
+      message: error.details[0].message
     });
   }
 
@@ -261,6 +244,38 @@ const validateInitiateSession = (req, res, next) => {
   next();
 };
 
+const validateInitiateSession = (req, res, next) => {
+  const schema = Joi.object({
+    mobile: Joi.string().pattern(MOBILE_REGEX).required().messages({
+      'string.pattern.base': 'mobile must be a valid 10-digit Indian mobile number',
+      'any.required': 'mobile is required',
+    }),
+
+    flow: Joi.string().optional().default("signin"),
+
+    redirect_url: Joi.string().uri().required().messages({
+      'string.uri': 'redirect_url must be a valid URL',
+      'any.required': 'redirect_url is required',
+    }),
+
+    doc_types: Joi.array()
+      .items(Joi.string())
+      .optional()
+      .default(["aadhaar"])
+  });
+
+  const { error, value } = schema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.details[0].message
+    });
+  }
+
+  req.validatedBody = value;
+  next();
+};
 const validateSessionId = (req, res, next) => {
   const schema = Joi.object({
     sessionId: Joi.string().required()
@@ -287,7 +302,7 @@ module.exports = {
   validateGST,
   validateCIN,
   validateLLPIN,
-  validateDigilocker,
+  validateDigilockerSession,
   validateInitiateSession,
   validateSessionId,
 };

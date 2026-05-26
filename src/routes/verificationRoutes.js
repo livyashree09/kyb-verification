@@ -6,8 +6,8 @@ const {
   getDigilockerUserProfile, getDigilockerDocuments
 } = require('../controllers/verificationController');
 const { 
-  validatePAN, validateGST, validateCIN, validateLLPIN, validateDigilocker,
-  validateInitiateSession, validateSessionId
+  validatePAN, validateGST, validateCIN, validateLLPIN, 
+  validateInitiateSession, validateSessionId,validateDigilockerSession
 } = require('../validators/kybValidator');
 
 /**
@@ -42,8 +42,11 @@ router.post('/llpin', validateLLPIN, checkLLPIN);
  * POST /api/verify/digilocker
  * Standalone Digilocker user verification.
  * Body: { "mobile": "9876543210" }
+ console.log("validateDigilockerSession:", validateDigilockerSession);
+console.log("checkDigilocker:", checkDigilocker);
  */
-router.post('/digilocker', validateDigilocker, checkDigilocker);
+
+router.post('/digilocker', checkDigilocker);
 
 /**
  * POST /api/verify/digilocker/sessions/init

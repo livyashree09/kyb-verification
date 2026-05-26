@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { getAuthToken } = require('./authService');
+const axios = require("axios");
+const { getAuthToken } = require("./authService");
 
 const BASE_URL = "https://test-api.sandbox.co.in/kyc/digilocker";
 
@@ -11,13 +11,43 @@ const getHeaders = async () => {
 
   return {
     "Content-Type": "application/json",
-    "Authorization": token, // if needed: `Bearer ${token}`
+    "Authorization": token, // Change to `Bearer ${token}` only if Sandbox requires it
     "x-api-key": process.env.SANDBOX_API_KEY,
   };
 };
 
 /**
- * 1. INITIATE DIGILOCKER SESSION (MAIN FLOW)
+ * 1. VERIFY USER
+ */
+const verifyUser = async (mobile) => {
+  try {
+    if (!mobile) throw new Error("mobile is required");
+
+    const headers = await getHeaders();
+
+    const requestBody = {
+      "@entity": "in.co.sandbox.kyc.digilocker.user.verification.request",
+      mobile
+    };
+
+    const response = await axios.post(
+      `${BASE_URL}/user/verify`,
+      requestBody,
+      { headers }
+    );
+
+    return response.data?.data;
+  } catch (error) {
+    console.error(
+      "verifyUser error:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+/**
+ * 2. INITIATE SESSION
  */
 const initiateSession = async (data) => {
   try {
@@ -25,7 +55,7 @@ const initiateSession = async (data) => {
       mobile,
       flow = "signin",
       redirect_url,
-      doc_types = ["aadhaar"],
+      doc_types = ["aadhaar"]
     } = data;
 
     if (!mobile) throw new Error("mobile is required");
@@ -34,19 +64,19 @@ const initiateSession = async (data) => {
     const headers = await getHeaders();
 
     const requestBody = {
-  "@entity": "in.co.sandbox.kyc.digilocker.session.request",
-  flow: flow,
-  redirect_url: redirectUrl,     // MUST convert
-  doc_types: docTypes,           // MUST convert
-  options: {
-    verification_method: options.verification_method || ["aadhaar"],
-    pinless: options.pinless ?? true,
-    usernameless: options.usernameless ?? true,
-    verified_mobile: mobile,
-  }
-};
+      "@entity": "in.co.sandbox.kyc.digilocker.session.request",
+      flow,
+      redirect_url,
+      doc_types,
+      options: {
+        verification_method: ["aadhaar"],
+        pinless: true,
+        usernameless: true,
+        verified_mobile: mobile
+      }
+    };
 
-    console.log("INIT SESSION REQUEST:", JSON.stringify(requestBody, null, 2));
+    console.log("REQUEST BODY:", JSON.stringify(requestBody, null, 2));
 
     const response = await axios.post(
       `${BASE_URL}/sessions/init`,
@@ -55,14 +85,18 @@ const initiateSession = async (data) => {
     );
 
     return response.data?.data;
+
   } catch (error) {
-    console.error("initiateSession error:", error.response?.data || error.message);
+    console.error(
+      "initiateSession error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 /**
- * 2. SESSION STATUS
+ * 3. SESSION STATUS
  */
 const getSessionStatus = async (sessionId) => {
   try {
@@ -77,13 +111,16 @@ const getSessionStatus = async (sessionId) => {
 
     return response.data?.data;
   } catch (error) {
-    console.error("getSessionStatus error:", error.response?.data || error.message);
+    console.error(
+      "getSessionStatus error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 /**
- * 3. USER PROFILE
+ * 4. USER PROFILE
  */
 const getUserProfile = async (sessionId) => {
   try {
@@ -98,13 +135,16 @@ const getUserProfile = async (sessionId) => {
 
     return response.data?.data;
   } catch (error) {
-    console.error("getUserProfile error:", error.response?.data || error.message);
+    console.error(
+      "getUserProfile error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 /**
- * 4. FETCH DOCUMENTS
+ * 5. FETCH DOCUMENTS
  */
 const fetchDocuments = async (sessionId, docType = "aadhaar") => {
   try {
@@ -119,12 +159,16 @@ const fetchDocuments = async (sessionId, docType = "aadhaar") => {
 
     return response.data?.data?.files || [];
   } catch (error) {
-    console.error("fetchDocuments error:", error.response?.data || error.message);
+    console.error(
+      "fetchDocuments error:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
 module.exports = {
+  verifyUser,
   initiateSession,
   getSessionStatus,
   getUserProfile,
